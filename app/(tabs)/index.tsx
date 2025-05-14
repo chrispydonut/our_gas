@@ -27,7 +27,7 @@ export default function Home() {
       {/* 상단 로고/알림 */}
       <View className="pt-10 mb-8 px-6 flex-row items-center justify-between">
         <View style={{ width: 40 }} />
-        <Text className="text-[26px] font-bold text-[#222] text-center flex-1">Logo2</Text>
+        <Text className="text-[26px] font-bold text-[#222] text-center flex-1">Logo3</Text>
         <TouchableOpacity className="p-1" onPress={() => router.push('/notification-center')}>
           <Ionicons name="notifications-outline" size={28} color="#222" />
         </TouchableOpacity>
