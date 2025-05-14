@@ -85,7 +85,8 @@ export default function MyService() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, marginBottom: 18, marginTop: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 12 }}
+        className='mb-2 mt-5 max-h-[40px]'
       >
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
@@ -101,7 +102,7 @@ export default function MyService() {
       </ScrollView>
 
       {/* 서비스 리스트 */}
-      <ScrollView>
+      <ScrollView className='flex-1'>
         {Object.keys(grouped).map(date => (
           <View key={date}>
             <Text className="text-[#888] text-[14px] font-semibold px-6 mb-2 mt-2">{date}</Text>
