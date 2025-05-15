@@ -54,7 +54,7 @@ export default function MyStoreScreen() {
           {/* 가게 추가 버튼 */}
           <TouchableOpacity
             className="bg-[#FFF2EE] rounded-2xl py-3 items-center flex-row justify-center mt-2"
-            onPress={() => router.push('/add-store')}
+            onPress={() => router.push('/add-store2')}
           >
             <Text className="text-[#FF5A36] text-[20px] font-bold mr-2">+</Text>
             <Text className="text-[#FF5A36] text-[16px] font-bold">가게 추가</Text>
