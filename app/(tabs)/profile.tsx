@@ -47,7 +47,7 @@ export default function Profile() {
 
       {/* 로그아웃 버튼 */}
       <View className="px-6 mb-4">
-        <TouchableOpacity className="bg-[#FFF2EE] rounded-2xl py-3 items-center flex-row justify-center">
+        <TouchableOpacity className="bg-[#FFF2EE] rounded-2xl py-3 items-center flex-row justify-center" onPress={() => router.replace('/login')}>
           <MaterialIcons name="logout" size={20} color="#FF5A36" />
           <Text className="ml-2 text-[#FF5A36] text-[16px] font-bold">로그아웃</Text>
         </TouchableOpacity>
