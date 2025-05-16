@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TextInput, Pressable, Switch, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Pressable,
+  Switch,
+  ScrollView,
+} from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5, Feather, Entypo } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -10,6 +19,11 @@ export default function Profile() {
   const [email, setEmail] = useState('second_email@naver.com');
   const [store, setStore] = useState('이동간반이 보문점');
   const router = useRouter();
+
+  // 로그아웃 (placeholder)
+  const handleLogout = () => {
+    router.replace('/login');
+  };
 
   return (
     <ScrollView className="flex-1 bg-white pt-8">
@@ -47,7 +61,7 @@ export default function Profile() {
 
       {/* 로그아웃 버튼 */}
       <View className="px-6 mb-4">
-        <TouchableOpacity className="bg-[#FFF2EE] rounded-2xl py-3 items-center flex-row justify-center" onPress={() => router.replace('/login')}>
+        <TouchableOpacity className="bg-[#FFF2EE] rounded-2xl py-3 items-center flex-row justify-center" onPress={handleLogout}>
           <MaterialIcons name="logout" size={20} color="#FF5A36" />
           <Text className="ml-2 text-[#FF5A36] text-[16px] font-bold">로그아웃</Text>
         </TouchableOpacity>
@@ -128,17 +142,11 @@ export default function Profile() {
               </View>
             </View>
             <View className="flex-row justify-between mt-4">
-              <TouchableOpacity
-                className="flex-1 items-center py-3 rounded-2xl mr-2"
-                onPress={() => setModalVisible(false)}
-              >
-                <Text className="text-[#888] text-[16px] font-bold">취소</Text>
+              <TouchableOpacity className="bg-[#FF5A36] rounded-xl px-6 py-3" onPress={() => setModalVisible(false)}>
+                <Text className="text-white font-bold text-[16px]">저장</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 items-center py-3 rounded-2xl bg-[#EB5A36] ml-2"
-                onPress={() => setModalVisible(false)}
-              >
-                <Text className="text-white text-[16px] font-bold">저장</Text>
+              <TouchableOpacity className="bg-gray-300 rounded-xl px-6 py-3" onPress={() => setModalVisible(false)}>
+                <Text className="text-black font-bold text-[16px]">취소</Text>
               </TouchableOpacity>
             </View>
           </View>
