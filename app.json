@@ -3,30 +3,30 @@
     "name": "GAS",
     "slug": "GAS",
     "version": "1.0.0",
-
     "scheme": "GAS",
     "web": {
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
-
     "userInterfaceStyle": "light",
-
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chan23l.GAS"
     },
     "android": {
       "adaptiveIcon": {
