@@ -1,34 +1,126 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { supabase } from '../lib/supabase';
+import { toInternational } from '../lib/toInternational';
+import { testSupabaseConnection } from '../lib/supabase';
+
 
 export default function Signup() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
+
   const router = useRouter();
 
-  const handleSignup = () => {
+  const handleTest = async () => {
+    setLoading(true);
+    try {
+      const testResult = await testSupabaseConnection();
+      setResult(testResult);
+      
+      if (testResult.success) {
+        Alert.alert('연결 성공', 'Supabase에 성공적으로 연결되었습니다.');
+      } else {
+        Alert.alert('연결 실패', `오류: ${testResult.error}`);
+      }
+    } catch (err) {
+      Alert.alert('테스트 실패', '연결 테스트 중 오류가 발생했습니다.');
+      console.error('Test Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 전화번호 유효성 검사
+  const validatePhone = (phoneNumber: string) => {
+    // 숫자만 추출
+    const numbersOnly = phoneNumber.replace(/[^0-9]/g, '');
+    
+    // 한국 휴대폰 번호 형식 검사 (010, 011, 016, 017, 018, 019)
+    if (!/^01[016789]/.test(numbersOnly)) {
+      return false;
+    }
+    
+    // 길이 검사 (하이픈 제외 11자리)
+    if (numbersOnly.length !== 11) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // 인증번호 요청
+  const handleSendOtp = async () => {
+    if (!phone) {
+      Alert.alert('입력 오류', '전화번호를 입력하세요.');
+      return;
+    }
+
+    if (!validatePhone(phone)) {
+      Alert.alert('입력 오류', '올바른 휴대폰 번호를 입력하세요.\n예: 01012345678');
+      return;
+    }
+
+    const internationalPhone = toInternational(phone);
+    setLoading(true);
+    
+    try {
+      console.log('Sending OTP to:', internationalPhone);
+      const { data, error } = await supabase.auth.signInWithOtp({ 
+        phone: internationalPhone,
+        options: {
+          shouldCreateUser: true
+        }
+      });
+      
+      if (error) {
+        console.error('Supabase OTP Error:', error);
+        Alert.alert('전송 실패', error.message || '인증번호 전송에 실패했습니다.');
+      } else {
+        console.log('OTP sent successfully:', data);
+        setOtpSent(true);
+        Alert.alert('인증번호가 전송되었습니다.');
+      }
+    } catch (err) {
+      console.error('Network Error:', err);
+      Alert.alert('오류 발생', '인증번호 전송 중 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 인증번호로 회원가입
+  const handleSignup = async () => {
     if (!phone || !code) {
       Alert.alert('입력 오류', '전화번호와 인증번호를 모두 입력하세요.');
       return;
     }
-
-    // 테스트용 인증번호 체크
-    if (code === '1234') {
+    const internationalPhone = toInternational(phone);
+    setLoading(true);
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: internationalPhone,
+      token: code,
+      type: 'sms',
+    });
+    setLoading(false);
+    if (error) {
+      Alert.alert('인증 실패', error.message);
+    } else {
       Alert.alert(
         '회원가입 성공',
         '회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.',
         [{ text: '확인', onPress: () => router.replace('/login') }],
         { cancelable: false }
       );
-    } else {
-      Alert.alert('인증 실패', '인증번호가 올바르지 않습니다.');
     }
   };
 
   // 로그인 화면으로 돌아가기
   const handleBack = () => {
-    router.back(); // 또는 router.replace('/login')
+    router.back();
   };
 
   return (
@@ -45,28 +137,70 @@ export default function Signup() {
 
         <TextInput
           className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-base"
-          placeholder="전화번호 (예: 01012345678)"
+          placeholder="전화번호 (예: 01012345678 또는 +821012345678)"
           placeholderTextColor="#999"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
+          editable={!otpSent}
         />
 
-        <TextInput
-          className="border border-gray-300 rounded-lg px-4 py-3 mb-6 text-base"
-          placeholder="인증번호 입력"
-          placeholderTextColor="#999"
-          value={code}
-          onChangeText={setCode}
-          keyboardType="number-pad"
-        />
+        {otpSent && (
+          <TextInput
+            className="border border-gray-300 rounded-lg px-4 py-3 mb-6 text-base"
+            placeholder="인증번호 입력"
+            placeholderTextColor="#999"
+            value={code}
+            onChangeText={setCode}
+            keyboardType="number-pad"
+          />
+        )}
 
+        {loading && <ActivityIndicator style={{ marginBottom: 16 }} />}
+
+        {!otpSent ? (
+          <TouchableOpacity
+            onPress={handleSendOtp}
+            className="bg-black rounded-lg py-3"
+            disabled={loading}
+          >
+            <Text className="text-white text-center font-medium text-base">인증번호 보내기</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleSignup}
+            className="bg-black rounded-lg py-3"
+            disabled={loading}
+          >
+            <Text className="text-white text-center font-medium text-base">확인</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <View className="flex-1 justify-center items-center p-6 bg-white text-black">
+        <Text className="text-2xl font-bold mb-8">Supabase 연결 테스트</Text>
+        
         <TouchableOpacity
-          onPress={handleSignup}
-          className="bg-black rounded-lg py-3"
+          onPress={handleTest}
+          className="bg-blue-500 rounded-lg px-6 py-3 mb-4"
+          disabled={loading}
         >
-          <Text className="text-white text-center font-medium text-base">확인</Text>
+          <Text className="text-white font-medium text-lg">
+            {loading ? '테스트 중...' : '연결 테스트'}
+          </Text>
         </TouchableOpacity>
+
+        {loading && <ActivityIndicator size="large" color="#0000ff" />}
+
+        {result && (
+          <View className="mt-4 p-4 rounded-lg bg-gray-100">
+            <Text className="text-lg font-medium">
+              상태: {result.success ? '성공' : '실패'}
+            </Text>
+            {result.error && (
+              <Text className="text-red-500 mt-2">{result.error}</Text>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );
