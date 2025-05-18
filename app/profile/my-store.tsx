@@ -69,7 +69,7 @@ export default function MyStoreScreen() {
             }`}
             disabled={selected === null}
             activeOpacity={0.8}
-            onPress={() => router.replace('/my-store')}
+            onPress={() => router.replace('/profile/my-store')}
           >
             <Text className="text-white text-[16px] font-bold">적용</Text>
           </TouchableOpacity>

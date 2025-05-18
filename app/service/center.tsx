@@ -28,7 +28,7 @@ export default function Center() {
       <Stack.Screen options={{ headerShown: false }} />
       {/* 상단 헤더 */}
       <View className="pt-10 flex-row items-center justify-between px-5 pb-2">
-        <TouchableOpacity onPress={() => router.replace('/(tabs)/three')}>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)/contact')}>
           <Ionicons name="chevron-back" size={28} color="#222" />
         </TouchableOpacity>
         <Text className="text-[22px] font-bold text-[#222]">고객센터</Text>

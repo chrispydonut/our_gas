@@ -16,11 +16,11 @@ export default function Inquiry() {
     <View className="flex-1 bg-white pt-8">
       {/* 상단 헤더 */}
       <View className="pt-10 flex-row items-center justify-between px-[18px] mb-3">
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
+        <TouchableOpacity onPress={() => router.replace('/')}>
           <Ionicons name="chevron-back" size={30} color="#222" />
         </TouchableOpacity>
         <Text className="text-[22px] font-bold text-[#222]">문의하기</Text>
-        <TouchableOpacity onPress={() => router.push('/center')}>
+        <TouchableOpacity onPress={() => router.push('/service/center')}>
           <Ionicons name="create-outline" size={26} color="#222" />
         </TouchableOpacity>
       </View>

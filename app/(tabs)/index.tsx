@@ -28,7 +28,7 @@ export default function Home() {
       <View className="pt-10 mb-8 px-6 flex-row items-center justify-between">
         <View style={{ width: 40 }} />
         <Text className="text-[26px] font-bold text-[#222] text-center flex-1">Logo3</Text>
-        <TouchableOpacity className="p-1" onPress={() => router.push('/notification-center')}>
+        <TouchableOpacity className="p-1" onPress={() => router.push('/notification/page')}>
           <Ionicons name="notifications-outline" size={28} color="#222" />
         </TouchableOpacity>
       </View>
@@ -65,7 +65,7 @@ export default function Home() {
                   <TouchableOpacity
                     key={item.key}
                     className="w-[104px] h-[104px] bg-white rounded-2xl items-center justify-center mx-3 shadow shadow-black/10 elevation-3"
-                    onPress={() => router.push(`/${item.key}` as any)}
+                    onPress={() => router.push(`/service/${item.key}` as any)}
                   >
                     <Image source={item.icon} className="w-12 h-12 mb-2" resizeMode="contain" />
                     <Text className="text-[15px] text-[#222] font-medium text-center">{item.label}</Text>

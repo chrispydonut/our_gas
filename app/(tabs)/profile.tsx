@@ -22,7 +22,7 @@ export default function Profile() {
 
   // 로그아웃 (placeholder)
   const handleLogout = () => {
-    router.replace('/login');
+    router.replace('/authentication/login');
   };
 
   return (
@@ -71,7 +71,7 @@ export default function Profile() {
       <View className="px-6">
         <TouchableOpacity
           className="flex-row items-center justify-between py-3 border-b border-[#F3F3F3]"
-          onPress={() => router.push('/my-store')}
+          onPress={() => router.push('/profile/my-store')}
         >
           <View className="flex-row items-center">
             <Entypo name="location-pin" size={20} color="#222" />
@@ -80,8 +80,8 @@ export default function Profile() {
           <Ionicons name="chevron-forward" size={20} color="#bbb" />
         </TouchableOpacity>
         <MenuItem icon={<Feather name="gift" size={20} color="#222" />} label="프로모션" />
-        <MenuItem icon={<Feather name="credit-card" size={20} color="#222" />} label="결제 수단" />
-        <MenuItem icon={<Feather name="help-circle" size={20} color="#222" />} label="고객센터" onPress={() => router.push('/center')} />
+        <MenuItem icon={<Feather name="credit-card" size={20} color="#222" />} label="결제 수단" onPress={() => router.push('/profile/payment')} />
+        <MenuItem icon={<Feather name="help-circle" size={20} color="#222" />} label="고객센터" onPress={() => router.push('/service/center')} />
       </View>
 
       {/* 알림 받기 스위치 */}

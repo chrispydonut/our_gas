@@ -112,7 +112,7 @@ export default function MyService() {
                 className="flex-row items-center px-6 py-3 bg-white"
                 onPress={() => {
                   const mappedStatus = statusMap[service.status as keyof typeof statusMap];
-                  router.push(`/service-detail?status=${mappedStatus}`);
+                  router.push(`/my_service/service-detail?status=${mappedStatus}`);
                 }}
                 activeOpacity={0.8}
               >

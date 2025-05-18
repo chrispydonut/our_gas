@@ -62,7 +62,7 @@ export default function ServiceDetail() {
           <Text className="text-[#222] font-bold text-[18px] p-3">{statusConfig.title}</Text>
           <Text className="text-[#222] text-[12px] p-3">{statusConfig.desc}</Text>
         </View>
-        <Image source={require('../assets/detail.png')} className="w-18 h-18" resizeMode="contain" />
+        <Image source={require('../../assets/detail.png')} className="w-18 h-18" resizeMode="contain" />
       </View>
 
       {/* 가게 정보 */}
@@ -95,7 +95,7 @@ export default function ServiceDetail() {
         </View>
         <View className="h-px bg-[#F0F0F0] mx-0" />
         <View className="flex-row items-center px-4 py-3">
-          <Image source={require('../assets/burner.png')} className="w-12 h-12 mr-3" resizeMode="contain" />
+          <Image source={require('../../assets/burner.png')} className="w-12 h-12 mr-3" resizeMode="contain" />
           <View className="flex-1">
             <Text className="font-bold text-[16px] text-[#222]">화구 교체 서비스</Text>
             <View className="flex-row items-center mt-0.5">

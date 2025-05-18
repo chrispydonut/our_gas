@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '../lib/supabase';
-import { toInternational } from '../lib/toInternational';
+import { supabase } from '../../lib/supabase';
+import { toInternational } from '../../lib/toInternational';
 
 export default function Login() {
   const [phone, setPhone] = useState('');
@@ -62,7 +62,7 @@ export default function Login() {
 
   // 회원가입 이동
   const handleSignup = () => {
-    router.push('/signup');
+    router.push('/authentication/signup');
   };
 
   return (
