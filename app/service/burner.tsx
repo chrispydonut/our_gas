@@ -34,7 +34,7 @@ export default function BurnerReplaceScreen() {
             <Ionicons name="chevron-back" size={28} color="#222" />
           </TouchableOpacity>
           <Text className="text-[22px] font-bold text-[#222]">화구교체</Text>
-          <TouchableOpacity onPress={() => router.push('/notification-center')}>
+          <TouchableOpacity onPress={() => router.push('/notification/page')}>
             <Ionicons name="notifications-outline" size={26} color="#222" />
           </TouchableOpacity>
         </View>
@@ -48,7 +48,7 @@ export default function BurnerReplaceScreen() {
             >
               {/* 이미지 자리 */}
               <View className="w-16 h-16 bg-[#F3F6FA] rounded-xl items-center justify-center mr-4">
-                <Image source={require('../assets/burner.png')} resizeMode="contain" />
+                <Image source={require('../../assets/burner.png')} resizeMode="contain" />
               </View>
               {/* 정보 */}
               <View className="flex-1">

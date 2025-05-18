@@ -86,7 +86,7 @@ export default function PaymentScreen() {
                 className="bg-[#EB5A36] rounded-[28px] py-5 px-8 items-center w-full"
                 onPress={() => {
                    setShowModal(false);
-               router.push('/two');
+               router.push('/(tabs)/my_service');
              }}
             >
   <Text className="text-white text-[16px] font-bold">나의 서비스 확인하기</Text>

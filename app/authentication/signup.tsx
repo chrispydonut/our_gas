@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '../lib/supabase';
-import { toInternational } from '../lib/toInternational';
-import { testSupabaseConnection } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
+import { toInternational } from '../../lib/toInternational';
 
 
 export default function Signup() {
@@ -11,39 +10,18 @@ export default function Signup() {
   const [code, setCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
 
   const router = useRouter();
 
-  const handleTest = async () => {
-    setLoading(true);
-    try {
-      const testResult = await testSupabaseConnection();
-      setResult(testResult);
-      
-      if (testResult.success) {
-        Alert.alert('연결 성공', 'Supabase에 성공적으로 연결되었습니다.');
-      } else {
-        Alert.alert('연결 실패', `오류: ${testResult.error}`);
-      }
-    } catch (err) {
-      Alert.alert('테스트 실패', '연결 테스트 중 오류가 발생했습니다.');
-      console.error('Test Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // 전화번호 유효성 검사
   const validatePhone = (phoneNumber: string) => {
     // 숫자만 추출
     const numbersOnly = phoneNumber.replace(/[^0-9]/g, '');
-    
     // 한국 휴대폰 번호 형식 검사 (010, 011, 016, 017, 018, 019)
     if (!/^01[016789]/.test(numbersOnly)) {
       return false;
     }
-    
     // 길이 검사 (하이픈 제외 11자리)
     if (numbersOnly.length !== 11) {
       return false;
@@ -58,7 +36,6 @@ export default function Signup() {
       Alert.alert('입력 오류', '전화번호를 입력하세요.');
       return;
     }
-
     if (!validatePhone(phone)) {
       Alert.alert('입력 오류', '올바른 휴대폰 번호를 입력하세요.\n예: 01012345678');
       return;
@@ -100,7 +77,7 @@ export default function Signup() {
     }
     const internationalPhone = toInternational(phone);
     setLoading(true);
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.verifyOtp({
       phone: internationalPhone,
       token: code,
       type: 'sms',
@@ -112,7 +89,7 @@ export default function Signup() {
       Alert.alert(
         '회원가입 성공',
         '회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.',
-        [{ text: '확인', onPress: () => router.replace('/login') }],
+        [{ text: '확인', onPress: () => router.replace('/authentication/login') }],
         { cancelable: false }
       );
     }
@@ -174,32 +151,6 @@ export default function Signup() {
           >
             <Text className="text-white text-center font-medium text-base">확인</Text>
           </TouchableOpacity>
-        )}
-      </View>
-      <View className="flex-1 justify-center items-center p-6 bg-white text-black">
-        <Text className="text-2xl font-bold mb-8">Supabase 연결 테스트</Text>
-        
-        <TouchableOpacity
-          onPress={handleTest}
-          className="bg-blue-500 rounded-lg px-6 py-3 mb-4"
-          disabled={loading}
-        >
-          <Text className="text-white font-medium text-lg">
-            {loading ? '테스트 중...' : '연결 테스트'}
-          </Text>
-        </TouchableOpacity>
-
-        {loading && <ActivityIndicator size="large" color="#0000ff" />}
-
-        {result && (
-          <View className="mt-4 p-4 rounded-lg bg-gray-100">
-            <Text className="text-lg font-medium">
-              상태: {result.success ? '성공' : '실패'}
-            </Text>
-            {result.error && (
-              <Text className="text-red-500 mt-2">{result.error}</Text>
-            )}
-          </View>
         )}
       </View>
     </View>

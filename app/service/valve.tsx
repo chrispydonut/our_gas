@@ -16,7 +16,7 @@ export default function Pipe() {
             <Ionicons name="chevron-back" size={28} color="#222" />
           </TouchableOpacity>
           <Text className="text-[22px] font-bold text-[#222]">밸브 교체</Text>
-          <TouchableOpacity onPress={() => router.push('/notification-center')}>
+          <TouchableOpacity onPress={() => router.push('/notification/page')}>
             <Ionicons name="notifications-outline" size={26} color="#222" />
           </TouchableOpacity>
         </View>

@@ -3,9 +3,13 @@ import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 
-const OPTIONS = ['LPG', 'LNG'];
+const OPTIONS = [
+  'LPG 경보기',
+  'LNG(도시가스) 경보기',
+  '그 외',
+];
 
-export default function Pipe() {
+export default function AlarmReplace() {
   const router = useRouter();
   const [selected, setSelected] = useState<number | null>(null);
   const [extra, setExtra] = useState('');
@@ -19,12 +23,12 @@ export default function Pipe() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 bg-white pt-8">
         {/* 상단 헤더 */}
-        <View className="pt-10 flex-row items-center justify-between px-5 mb-3">
+        <View className="pt-10 flex-row items-center justify-between px-5 mb-5">
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={28} color="#222" />
           </TouchableOpacity>
-          <Text className="text-[22px] font-bold text-[#222]">시공견적 문의</Text>
-          <TouchableOpacity onPress={() => router.push('/notification-center')}>
+          <Text className="text-[22px] font-bold text-[#222]">경보기 교체</Text>
+          <TouchableOpacity onPress={() => router.push('/notification/page')}>
             <Ionicons name="notifications-outline" size={26} color="#222" />
           </TouchableOpacity>
         </View>
@@ -37,16 +41,14 @@ export default function Pipe() {
               <TouchableOpacity
                 key={opt}
                 onPress={() => setSelected(idx)}
-                className={`flex-row items-center bg-white rounded-2xl px-4 py-5 mb-4 border-[1.5] ${
-                  isActive ? 'border-[#EB5A36]' : 'border-[#eee]'
-                }`}
+                className={`flex-row items-center rounded-2xl px-4 py-5 mb-4 border ${isActive ? 'border-[#EB5A36]' : 'border-[#eee]'}`}
                 activeOpacity={0.8}
               >
                 <Ionicons
                   name={isActive ? 'radio-button-on' : 'radio-button-off'}
                   size={22}
                   color={isActive ? '#EB5A36' : '#bbb'}
-                  className="mr-3"
+                  style={{ marginRight: 12 }}
                 />
                 <Text className="text-[17px] text-[#222]">{opt}</Text>
               </TouchableOpacity>
@@ -56,7 +58,7 @@ export default function Pipe() {
           {/* 추가 요청사항 */}
           <TextInput
             className="w-full min-h-[56px] h-32 bg-[#F6F7FB] rounded-2xl px-4 py-4 text-[15px] text-[#888] mt-1"
-            placeholder="문의사항을 입력해주세요.."
+            placeholder="추가 요청사항을 입력해주세요.."
             placeholderTextColor="#bbb"
             value={extra}
             onChangeText={setExtra}
@@ -68,13 +70,11 @@ export default function Pipe() {
         <View className="absolute left-0 right-0 bottom-14 items-center">
           <TouchableOpacity
             className="w-[90%] rounded-[28px] py-5 items-center"
-            style={{
-              backgroundColor: selected !== null ? activeColor : inactiveColor,
-            }}
+            style={{ backgroundColor: selected !== null ? activeColor : inactiveColor }}
             activeOpacity={0.8}
             onPress={() => setShowModal(true)}
           >
-            <Text className="text-white text-[16px] font-bold">시공견적 문의하기</Text>
+            <Text className="text-white text-[16px] font-bold">경보기 교체 신청</Text>
           </TouchableOpacity>
         </View>
 
@@ -91,7 +91,7 @@ export default function Pipe() {
                 className="w-full bg-[#EB5A36] rounded-[28px] py-5 items-center"
                 onPress={() => {
                   setShowModal(false);
-                  router.replace('/two');
+                  router.replace('/(tabs)/my_service');
                 }}
                 activeOpacity={0.85}
               >

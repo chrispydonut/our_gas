@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
@@ -16,7 +16,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="my_service"
         options={{
           title: '나의 서비스',
           headerShown: false,
@@ -24,7 +24,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="three"
+        name="contact"
         options={{
           title: '문의하기',
           headerShown: false,
