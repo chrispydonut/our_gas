@@ -86,6 +86,21 @@ export default function Signup() {
     if (error) {
       Alert.alert('인증 실패', error.message);
     } else {
+      // 유저 정보 가져오기
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setLoading(false);
+        Alert.alert('오류', '유저 정보를 불러올 수 없습니다.');
+        return;
+      }
+      // 유저 정보를 profiles 테이블에 저장
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          phone: internationalPhone,
+        });
       Alert.alert(
         '회원가입 성공',
         '회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.',
