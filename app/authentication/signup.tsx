@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { toInternational } from '../../lib/toInternational';
 
-
 export default function Signup() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -12,7 +11,6 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
 
   // 전화번호 유효성 검사
   const validatePhone = (phoneNumber: string) => {
@@ -26,7 +24,6 @@ export default function Signup() {
     if (numbersOnly.length !== 11) {
       return false;
     }
-    
     return true;
   };
 
@@ -43,16 +40,33 @@ export default function Signup() {
 
     const internationalPhone = toInternational(phone);
     setLoading(true);
-    
+
     try {
+      // 1. 이미 가입된 전화번호인지 profiles에서 조회
+      const { data: existUsers, error: existError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', internationalPhone);
+
+      if (existError) {
+        throw existError;
+      }
+
+      if (existUsers && existUsers.length > 0) {
+        Alert.alert('중복 가입', '이미 가입된 전화번호입니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. 미가입일 경우에만 인증번호 요청
       console.log('Sending OTP to:', internationalPhone);
-      const { data, error } = await supabase.auth.signInWithOtp({ 
+      const { data, error } = await supabase.auth.signInWithOtp({
         phone: internationalPhone,
         options: {
-          shouldCreateUser: true
-        }
+          shouldCreateUser: true,
+        },
       });
-      
+
       if (error) {
         console.error('Supabase OTP Error:', error);
         Alert.alert('전송 실패', error.message || '인증번호 전송에 실패했습니다.');
@@ -62,7 +76,7 @@ export default function Signup() {
         Alert.alert('인증번호가 전송되었습니다.');
       }
     } catch (err) {
-      console.error('Network Error:', err);
+      console.error('Network/Error:', err);
       Alert.alert('오류 발생', '인증번호 전송 중 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
     } finally {
       setLoading(false);
@@ -103,8 +117,8 @@ export default function Signup() {
         });
       Alert.alert(
         '회원가입 성공',
-        '회원가입이 완료되었습니다.\n로그인 화면으로 이동합니다.',
-        [{ text: '확인', onPress: () => router.replace('/authentication/login') }],
+        '회원가입이 완료되었습니다.\n가게 추가 화면으로 이동합니다.',
+        [{ text: '확인', onPress: () => router.replace('/add-store1') }],
         { cancelable: false }
       );
     }

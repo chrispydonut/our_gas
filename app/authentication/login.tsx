@@ -43,20 +43,37 @@ export default function Login() {
       type: 'sms',
     });
     setLoading(false);
+
     if (error) {
       Alert.alert('로그인 실패', error.message);
     } else {
-      Alert.alert(
-        '로그인 성공',
-        '이제 가게를 추가해주세요.',
-        [
-          {
-            text: '시작하기',
-            onPress: () => router.replace('/add-store1')
-          }
-        ],
-        { cancelable: false }
-      );
+      // ✅ 세션에서 유저 ID 가져오기
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user.id;
+
+      if (!userId) {
+        Alert.alert('에러', '유저 정보를 불러올 수 없습니다.');
+        return;
+      }
+
+      // ✅ stores 테이블에서 user_id 기준으로 조회
+      const { data: stores, error: storeError } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (storeError) {
+        Alert.alert('에러', '가게 정보 조회 실패: ' + storeError.message);
+        return;
+      }
+
+      if (!stores || stores.length === 0) {
+        // ❗ 가게 정보 없음 → 가게 등록 화면
+        router.replace('/add-store1');
+      } else {
+        // ✅ 가게 정보 있음 → 홈 또는 메인 화면
+        router.replace('/');
+      }
     }
   };
 
