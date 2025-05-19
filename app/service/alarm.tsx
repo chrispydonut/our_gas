@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { supabase } from '~/lib/supabase';
 
 const OPTIONS = [
   'LPG 경보기',
@@ -13,10 +14,92 @@ export default function AlarmReplace() {
   const router = useRouter();
   const [selected, setSelected] = useState<number | null>(null);
   const [extra, setExtra] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   const activeColor = '#EB5A36';
   const inactiveColor = '#FFBDBD';
+
+  const handleSubmit = async () => {
+    if (selected === null) return;
+  
+    setLoading(true);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+    if (userError || !user) {
+      Alert.alert('오류', '로그인 정보를 확인할 수 없습니다.');
+      setLoading(false);
+      return;
+    }
+  
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('default_store_id')
+      .eq('id', user.id)
+      .single();
+  
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .select('id')
+      .eq('name', 'alarm') // 실제로는 '경보기 교체' 혹은 key slug 값
+      .single();
+  
+    if (serviceError || !service?.id) {
+      Alert.alert('에러', '서비스 정보를 불러오지 못했습니다.');
+      setLoading(false);
+      return;
+    }
+  
+    const now = new Date().toISOString();
+  
+    const { data: request, error: requestError } = await supabase
+      .from('service_requests')
+      .insert({
+        user_id: user.id,
+        store_id: profile?.default_store_id || null,
+        service_id: service.id,
+        status: '요청됨',
+        created_at: now,
+        updated_at: now,
+      })
+      .select('id')
+      .single();
+  
+    if (requestError || !request) {
+      Alert.alert('요청 실패', requestError?.message || '요청을 생성할 수 없습니다.');
+      setLoading(false);
+      return;
+    }
+  
+    const details = [
+      {
+        request_id: request.id,
+        key: '경보기 종류',
+        value: OPTIONS[selected],
+      },
+    ];
+  
+    if (extra.trim()) {
+      details.push({
+        request_id: request.id,
+        key: '추가 요청사항',
+        value: extra,
+      });
+    }
+  
+    const { error: detailError } = await supabase
+      .from('request_details')
+      .insert(details);
+  
+    setLoading(false);
+  
+    if (detailError) {
+      Alert.alert('저장 실패', detailError.message);
+    } else {
+      setShowModal(true); // 요청 완료 모달
+    }
+  };
+  
 
   return (
     <>
@@ -72,9 +155,11 @@ export default function AlarmReplace() {
             className="w-[90%] rounded-[28px] py-5 items-center"
             style={{ backgroundColor: selected !== null ? activeColor : inactiveColor }}
             activeOpacity={0.8}
-            onPress={() => setShowModal(true)}
+            onPress={handleSubmit}
           >
-            <Text className="text-white text-[16px] font-bold">경보기 교체 신청</Text>
+            <Text className="text-white text-[16px] font-bold">
+              {loading ? '신청 중...' : '경보기 교체 신청'}
+            </Text>
           </TouchableOpacity>
         </View>
 
