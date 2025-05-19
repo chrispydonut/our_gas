@@ -3,7 +3,7 @@
     "name": "GAS",
     "slug": "GAS",
     "version": "1.0.0",
-    "scheme": "GAS",
+    "scheme": "gas",
     "web": {
       "bundler": "metro",
       "output": "static"
@@ -32,6 +32,19 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4194e25c-5c7c-4138-8c60-da62f071c5de"
+      }
+    },
+    "owner": "spagettimaker",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4194e25c-5c7c-4138-8c60-da62f071c5de"
     }
   }
 }
