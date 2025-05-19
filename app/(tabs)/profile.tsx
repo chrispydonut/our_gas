@@ -8,6 +8,9 @@ import {
   Pressable,
   Switch,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5, Feather, Entypo } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -26,15 +29,16 @@ export default function Profile() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white pt-8">
-      {/* 상단 헤더 */}
-      <View className="pt-10 flex-row items-center justify-between px-5 mb-3">
-        <TouchableOpacity>
-          <Ionicons name="chevron-back" size={28} color="#222" />
-        </TouchableOpacity>
-        <Text className="text-[22px] font-bold text-[#222]">프로필</Text>
-        <View style={{ width: 28 }} />
-      </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      <SafeAreaView className="flex-1 bg-white">
+        {/* 상단 헤더 */}
+        <View className="flex-row items-center justify-between px-5 pt-4 pb-2 bg-white">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={28} color="#222" />
+          </TouchableOpacity>
+          <Text className="text-[22px] font-bold text-[#222]">프로필</Text>
+          <View style={{ width: 28 }} />
+        </View>
 
       {/* 프로필 정보 */}
       <View className="px-6 mb-4">
@@ -152,7 +156,8 @@ export default function Profile() {
           </View>
         </Pressable>
       </Modal>
-    </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
