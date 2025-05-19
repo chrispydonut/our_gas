@@ -1,19 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-
-const STORES = [
-  { name: '이동간반이 효자본점', address: '경북 포항시 남구 효성로 15번길 5-1' },
-  { name: '경주보문점', address: '경북 경주시 보문로 549' },
-];
+import { supabase } from '../../lib/supabase';
 
 export default function MyStoreScreen() {
+  const [stores, setStores] = useState<any[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const activeColor = '#EB5A36';
-  const inactiveColor = '#FFBDBD';
+  useEffect(() => {
+    const fetchStores = async () => {
+      setLoading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user.id;
+
+      const { data, error } = await supabase
+        .from('stores')
+        .select('id, name, address')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setStores(data);
+      } else {
+        console.warn('가게 불러오기 실패:', error?.message);
+      }
+      setLoading(false);
+    };
+
+    fetchStores();
+  }, []);
 
   return (
     <>
@@ -30,26 +48,32 @@ export default function MyStoreScreen() {
 
         {/* 가게 리스트 */}
         <ScrollView className="px-5" contentContainerStyle={{ paddingBottom: 24 }}>
-          {STORES.map((store, idx) => (
-            <TouchableOpacity
-              key={store.name}
-              className="bg-white rounded-2xl border border-[#eee] px-4 py-3 mb-3 flex-row items-center justify-between"
-              onPress={() => setSelected(idx)}
-              activeOpacity={0.8}
-            >
-              <View>
-                <Text className="text-[16px] font-bold text-[#222] mb-1">{store.name}</Text>
-                <Text className="text-[13px] text-[#888]">{store.address}</Text>
-              </View>
-              <View
-                className={`w-6 h-6 rounded-full border-2 ${selected === idx ? 'border-[#FF5A36]' : 'border-[#ccc]'} items-center justify-center`}
+          {loading ? (
+            <ActivityIndicator size="large" className="mt-10" />
+          ) : stores.length === 0 ? (
+            <Text className="text-center text-gray-400 mt-6">등록된 가게가 없습니다.</Text>
+          ) : (
+            stores.map((store, idx) => (
+              <TouchableOpacity
+                key={store.id}
+                className="bg-white rounded-2xl border border-[#eee] px-4 py-3 mb-3 flex-row items-center justify-between"
+                onPress={() => setSelected(idx)}
+                activeOpacity={0.8}
               >
-                {selected === idx && (
-                  <View className="w-3.5 h-3.5 rounded-full bg-[#FF5A36]" />
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View>
+                  <Text className="text-[16px] font-bold text-[#222] mb-1">{store.name}</Text>
+                  <Text className="text-[13px] text-[#888]">{store.address}</Text>
+                </View>
+                <View
+                  className={`w-6 h-6 rounded-full border-2 ${selected === idx ? 'border-[#FF5A36]' : 'border-[#FADCD2]'} items-center justify-center`}
+                >
+                  {selected === idx && (
+                    <View className="w-3.5 h-3.5 rounded-full bg-[#FF5A36]" />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
 
           {/* 가게 추가 버튼 */}
           <TouchableOpacity
@@ -69,7 +93,10 @@ export default function MyStoreScreen() {
             }`}
             disabled={selected === null}
             activeOpacity={0.8}
-            onPress={() => router.replace('/profile/my-store')}
+            onPress={() => {
+              // 선택된 가게를 글로벌 상태나 profile에 연결하는 로직 작성 가능
+              router.replace('/profile/my-store');
+            }}
           >
             <Text className="text-white text-[16px] font-bold">적용</Text>
           </TouchableOpacity>
