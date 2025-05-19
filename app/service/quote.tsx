@@ -109,7 +109,7 @@ export default function AlarmReplace() {
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={28} color="#222" />
           </TouchableOpacity>
-          <Text className="text-[22px] font-bold text-[#222]">경보기 교체</Text>
+          <Text className="text-[22px] font-bold text-[#222]">시공견적 문의</Text>
           <TouchableOpacity onPress={() => router.push('/notification/page')}>
             <Ionicons name="notifications-outline" size={26} color="#222" />
           </TouchableOpacity>
@@ -157,7 +157,7 @@ export default function AlarmReplace() {
             onPress={handleSubmit}
           >
             <Text className="text-white text-[16px] font-bold">
-              {loading ? '신청 중...' : '경보기 교체 신청'}
+              {loading ? '신청 중...' : '시공견적 문의'}
             </Text>
           </TouchableOpacity>
         </View>
