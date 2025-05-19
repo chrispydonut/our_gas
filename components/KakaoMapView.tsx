@@ -6,7 +6,7 @@ export default function KakaoMapView() {
   const webRef = useRef(null);
 
   const html = `
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html style="height:100%;">
   <head>
     <meta charset="utf-8" />
