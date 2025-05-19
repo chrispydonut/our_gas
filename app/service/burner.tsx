@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-
+import { supabase } from '~/lib/supabase';
 const ITEMS = [
   { id: 1, name: '1열 1구', price: 15000 },
   { id: 2, name: '1열 1구', price: 25000 },
@@ -13,6 +13,7 @@ const ITEMS = [
 
 export default function BurnerReplaceScreen() {
   const [counts, setCounts] = useState(Array(ITEMS.length).fill(0));
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleCount = (idx: number, diff: number) => {
@@ -23,6 +24,80 @@ export default function BurnerReplaceScreen() {
 
   const total = counts.reduce((sum, c, i) => sum + c * ITEMS[i].price, 0);
   const anySelected = counts.some(c => c > 0);
+
+  const handleSubmit = async () => {
+    if (!anySelected) return;
+    setLoading(true);
+  
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      Alert.alert('오류', '유저 정보를 불러올 수 없습니다.');
+      return;
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('default_store_id')
+      .eq('id', user.id)
+      .single();
+  
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .select('id')
+      .eq('name', 'burner')
+      .single();
+  
+    if (!service?.id) {
+      Alert.alert('에러', '기본 가게 또는 서비스 정보를 불러올 수 없습니다.');
+      setLoading(false);
+      return;
+    }
+  
+    const { data: request, error: requestError } = await supabase
+      .from('service_requests')
+      .insert({
+        user_id: user.id,
+        store_id: profile?.default_store_id,
+        service_id: service.id,
+        status: '요청됨',
+      })
+      .select('id')
+      .single();
+  
+    if (requestError || !request) {
+      Alert.alert('에러', requestError?.message || '요청 생성 실패');
+      setLoading(false);
+      return;
+    }
+  
+    const requestDetails = ITEMS
+      .map((item, idx) => {
+        const count = counts[idx];
+        if (count > 0) {
+          return {
+            request_id: request.id,
+            key: item.name,
+            value: `${count}개`,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  
+    const { error: detailError } = await supabase
+      .from('request_details')
+      .insert(requestDetails);
+  
+    setLoading(false);
+  
+    if (detailError) {
+      Alert.alert('에러', detailError.message);
+    } else {
+      Alert.alert('요청 완료', '화구 교체 서비스 요청이 완료되었습니다.');
+      router.replace('/(tabs)/my_service');
+    }
+  };
+  
 
   return (
     <>
@@ -83,7 +158,7 @@ export default function BurnerReplaceScreen() {
           </View>
           <TouchableOpacity
             className={anySelected ? "bg-[#EB5A36] rounded-[28px] py-5 items-center" : "bg-[#FADCD2] rounded-[28px] py-5 items-center"}
-            onPress={() => anySelected && router.push('/payment')}
+            onPress={() => anySelected && handleSubmit()}
             disabled={!anySelected}
           >
             <Text className="text-white text-[16px] font-bold">화구교체 신청</Text>
