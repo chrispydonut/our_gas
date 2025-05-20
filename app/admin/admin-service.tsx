@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = ['전체', '요청됨', '작업 시행 중', '서비스 완료', '서비스 취소됨'];
@@ -37,30 +37,36 @@ export default function MyService() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const fetchRequests = async () => {
+    const { data, error } = await supabase
+      .from('service_requests')
+      .select(`
+        id,
+        status,
+        created_at,
+        store:stores(name),
+        service:services(name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('서비스 요청 로드 실패:', error.message);
+    } else {
+      setRequests(data || []);
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchRequests = async () => {
-      const { data, error } = await supabase
-        .from('service_requests')
-        .select(`
-          id,
-          status,
-          created_at,
-          store:stores(name),
-          service:services(name)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.warn('서비스 요청 로드 실패:', error.message);
-      } else {
-        setRequests(data || []);
-      }
-
-      setLoading(false);
-    };
-
     fetchRequests();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRequests();
+    }, [])
+  );
 
   const filtered = requests.filter((r) => {
     if (selected === '전체') return true;
@@ -86,13 +92,11 @@ export default function MyService() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* 상단 헤더 */}
       <View className="pt-20 px-5 mb-3 flex-row items-center justify-center">
         <Text className="text-[22px] font-bold text-[#222]">서비스 관리</Text>
         <View className="w-[28px]" />
       </View>
 
-      {/* 카테고리 필터 */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -105,14 +109,11 @@ export default function MyService() {
             className={`rounded-2xl px-4 py-2 mr-2 h-[30px] ${selected === cat ? 'bg-[#FF5A36]' : 'bg-[#F3F3F3]'}`}
             onPress={() => setSelected(cat)}
           >
-            <Text className={`text-[15px] font-medium ${selected === cat ? 'text-white' : 'text-[#222]'}`}>
-              {cat}
-            </Text>
+            <Text className={`text-[15px] font-medium ${selected === cat ? 'text-white' : 'text-[#222]'}`}>{cat}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* 서비스 리스트 */}
       {loading ? (
         <ActivityIndicator className="mt-5" />
       ) : (
@@ -124,7 +125,7 @@ export default function MyService() {
                 <TouchableOpacity
                   key={service.id}
                   className="flex-row items-center px-6 py-3 bg-white"
-                  onPress={() => router.push(`/my_service/service-detail?id=${service.id}`)}
+                  onPress={() => router.push(`/admin/service-detail?id=${service.id}`)}
                   activeOpacity={0.8}
                 >
                   <Image
