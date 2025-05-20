@@ -17,7 +17,15 @@ export default function Login() {
       Alert.alert('입력 오류', '전화번호를 입력하세요.');
       return;
     }
+
     const internationalPhone = toInternational(phone);
+
+    // ✅ 관리자 전화번호면 바로 이동
+    if (internationalPhone === '+821001234567') {
+      router.replace('/admin/admin-service');
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({ phone: internationalPhone });
     setLoading(false);
@@ -35,6 +43,7 @@ export default function Login() {
       Alert.alert('입력 오류', '전화번호와 인증번호를 모두 입력하세요.');
       return;
     }
+
     const internationalPhone = toInternational(phone);
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
@@ -47,16 +56,21 @@ export default function Login() {
     if (error) {
       Alert.alert('로그인 실패', error.message);
     } else {
-      // ✅ 세션에서 유저 ID 가져오기
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user.id;
+      const userPhone = session?.user.phone;
 
-      if (!userId) {
+      if (!userId || !userPhone) {
         Alert.alert('에러', '유저 정보를 불러올 수 없습니다.');
         return;
       }
 
-      // ✅ stores 테이블에서 user_id 기준으로 조회
+      // ✅ 로그인 후에도 admin이면 admin-service로 보냄 (예외처리)
+      if (userPhone === '+821001234567') {
+        router.replace('/admin/admin-service');
+        return;
+      }
+
       const { data: stores, error: storeError } = await supabase
         .from('stores')
         .select('*')
@@ -68,16 +82,13 @@ export default function Login() {
       }
 
       if (!stores || stores.length === 0) {
-        // ❗ 가게 정보 없음 → 가게 등록 화면
         router.replace('/add-store1');
       } else {
-        // ✅ 가게 정보 있음 → 홈 또는 메인 화면
         router.replace('/');
       }
     }
   };
 
-  // 회원가입 이동
   const handleSignup = () => {
     router.push('/authentication/signup');
   };
