@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../lib/supabase';
@@ -18,9 +26,8 @@ export default function AdminCenter() {
       const adminIdValue = data.user?.id;
       if (!adminIdValue || !conversation_id) return;
       setAdminId(adminIdValue);
-      console.log('관리자용 채팅방 내 id:', data.user)
 
-      // admin_id가 없는 경우 현재 관리자로 연결
+      // 관리자 자동 할당
       const { data: conv } = await supabase
         .from('conversations')
         .select('admin_id')
@@ -34,24 +41,31 @@ export default function AdminCenter() {
           .eq('id', conversation_id);
       }
 
+      // 초기 메시지 로딩
       const { data: initialMsgs } = await supabase
         .from('messages')
         .select('*')
         .eq('conversation_id', conversation_id)
         .order('created_at');
+
       setMessages(initialMsgs || []);
 
+      // 실시간 메시지 리스닝
       const channel = supabase
         .channel('admin-chat-realtime')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversation_id}`,
-        }, (payload) => {
-          setMessages(prev => [...prev, payload.new]);
-          setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
-        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversation_id}`,
+          },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new]);
+            setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
+          }
+        )
         .subscribe();
 
       return () => {
@@ -64,32 +78,23 @@ export default function AdminCenter() {
 
   const handleSend = async () => {
     if (!input.trim() || !conversation_id || !adminId) return;
-  
-    // 메시지 insert + insert된 row 받아오기
-    const { data, error } = await supabase
+
+    await supabase
       .from('messages')
       .insert({
         conversation_id,
         sender_id: adminId,
         content: input.trim(),
-      })
-      .select()
-      .single();
-  
-    // conversation.updated_at 갱신
-    await supabase.from('conversations')
+      });
+
+    await supabase
+      .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversation_id);
-  
+
     setInput('');
-  
-    // insert된 메시지를 바로 state에 추가!
-    if (data) {
-      setMessages(prev => [...prev, data]);
-      setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
-    }
+    setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
   };
-  
 
   if (!adminId) return null;
 
@@ -110,12 +115,20 @@ export default function AdminCenter() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View
-            className={`px-4 my-1 ${item.sender_id === adminId ? 'items-end' : 'items-start'}`}
+            className={`px-4 my-1 ${
+              item.sender_id === adminId ? 'items-end' : 'items-start'
+            }`}
           >
             <View
-              className={`rounded-2xl py-2 px-3 max-w-[80%] ${item.sender_id === adminId ? 'bg-[#EB5A36]' : 'bg-[#F6F7FB]'}`}
+              className={`rounded-2xl py-2 px-3 max-w-[80%] ${
+                item.sender_id === adminId ? 'bg-[#EB5A36]' : 'bg-[#F6F7FB]'
+              }`}
             >
-              <Text className={`text-[15px] leading-[22px] ${item.sender_id === adminId ? 'text-white' : 'text-[#222]'}`}>
+              <Text
+                className={`text-[15px] leading-[22px] ${
+                  item.sender_id === adminId ? 'text-white' : 'text-[#222]'
+                }`}
+              >
                 {item.content}
               </Text>
             </View>
@@ -125,7 +138,9 @@ export default function AdminCenter() {
         onContentSizeChange={() => flatListRef.current?.scrollToEnd?.()}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View className="flex-row items-center p-3 bg-white mb-8">
           <Ionicons name="add" size={24} color="#222" className="mr-2" />
           <View className="flex-1 bg-[#F6F7FB] rounded-full px-4 py-1.5">
@@ -140,7 +155,11 @@ export default function AdminCenter() {
             />
           </View>
           <TouchableOpacity onPress={handleSend} className="ml-2">
-            <Ionicons name="arrow-up-circle" size={28} color={input.trim() ? '#EB5A36' : '#ccc'} />
+            <Ionicons
+              name="arrow-up-circle"
+              size={28}
+              color={input.trim() ? '#EB5A36' : '#ccc'}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

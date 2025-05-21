@@ -1,80 +1,71 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 
-export default function Center() {
-  const [conversationId, setConversationId] = useState<string | null>(null);
+export default function AdminCenter() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
-  const [userId, setUserId] = useState<string | null>(null); // userId state!
+  const [adminId, setAdminId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
-
-  const ADMIN_ID = 'f0887d78-02cc-4e94-a9a5-76baf8bac9f4';
+  const { conversation_id } = useLocalSearchParams();
 
   useEffect(() => {
     const init = async () => {
-      // 1. 유저 정보 가져오기
-      const { data: authData } = await supabase.auth.getUser();
-      const userIdValue = authData.user?.id;
-      if (!userIdValue) return;
-      setUserId(userIdValue);
+      const { data } = await supabase.auth.getUser();
+      const adminIdValue = data.user?.id;
+      if (!adminIdValue || !conversation_id) return;
+      setAdminId(adminIdValue);
 
-      // 2. 내 프로필에서 default_store_id(내 가게 id) 가져오기
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('default_store_id')
-        .eq('id', userIdValue)
-        .single();
-      const STORE_ID = profile?.default_store_id;
-
-      // 3. 기존 conversation 찾기
-      const { data: existing } = await supabase
+      // 관리자 자동 할당
+      const { data: conv } = await supabase
         .from('conversations')
-        .select('id')
-        .eq('user_id', userIdValue)
-        .maybeSingle();
+        .select('admin_id')
+        .eq('id', conversation_id)
+        .single();
 
-      let convId = existing?.id;
-      if (!convId && STORE_ID) {
-        // 4. 없으면 admin_id, store_id까지 같이 저장
-        const { data: created } = await supabase
+      if (!conv?.admin_id) {
+        await supabase
           .from('conversations')
-          .insert({
-            user_id: userIdValue,
-            admin_id: ADMIN_ID,
-            store_id: STORE_ID
-          })
-          .select()
-          .single();
-        convId = created.id;
+          .update({ admin_id: adminIdValue })
+          .eq('id', conversation_id);
       }
-      setConversationId(convId);
 
-      if (!convId) return;
-
-      // 5. 메시지 불러오기
+      // 초기 메시지 로딩
       const { data: initialMsgs } = await supabase
         .from('messages')
         .select('*')
-        .eq('conversation_id', convId)
+        .eq('conversation_id', conversation_id)
         .order('created_at');
+
       setMessages(initialMsgs || []);
 
-      // 6. 실시간 채널 구독
+      // 실시간 메시지 리스닝
       const channel = supabase
-        .channel('user-chat-realtime')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${convId}`,
-        }, (payload) => {
-          setMessages(prev => [...prev, payload.new]);
-          setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
-        })
+        .channel('admin-chat-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversation_id}`,
+          },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new]);
+            setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
+          }
+        )
         .subscribe();
 
       return () => {
@@ -83,39 +74,29 @@ export default function Center() {
     };
 
     init();
-  }, []);
+  }, [conversation_id]);
 
   const handleSend = async () => {
-    if (!input.trim() || !conversationId || !userId) return;
-  
-    // 메시지 insert + insert된 데이터 바로 받아오기
-    const { data, error } = await supabase
+    if (!input.trim() || !conversation_id || !adminId) return;
+
+    await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationId,
-        sender_id: userId,
+        conversation_id,
+        sender_id: adminId,
         content: input.trim(),
-      })
-      .select()
-      .single();
-  
-    // conversation.updated_at 갱신
-    await supabase.from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId);
-  
-    setInput('');
-  
-    // insert된 메시지를 바로 state에 추가!
-    if (data) {
-      setMessages(prev => [...prev, data]);
-      setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
-    }
-  };
-  
+      });
 
-  // userId 아직 없으면 렌더 X (권장)
-  if (!userId) return null;
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversation_id);
+
+    setInput('');
+    setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
+  };
+
+  if (!adminId) return null;
 
   return (
     <View className="flex-1 bg-white pt-8">
@@ -134,12 +115,20 @@ export default function Center() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View
-            className={`px-4 my-1 ${item.sender_id === userId ? 'items-end' : 'items-start'}`}
+            className={`px-4 my-1 ${
+              item.sender_id === adminId ? 'items-end' : 'items-start'
+            }`}
           >
             <View
-              className={`rounded-2xl py-2 px-3 max-w-[80%] ${item.sender_id === userId ? 'bg-[#EB5A36]' : 'bg-[#F6F7FB]'}`}
+              className={`rounded-2xl py-2 px-3 max-w-[80%] ${
+                item.sender_id === adminId ? 'bg-[#EB5A36]' : 'bg-[#F6F7FB]'
+              }`}
             >
-              <Text className={`text-[15px] leading-[22px] ${item.sender_id === userId ? 'text-white' : 'text-[#222]'}`}>
+              <Text
+                className={`text-[15px] leading-[22px] ${
+                  item.sender_id === adminId ? 'text-white' : 'text-[#222]'
+                }`}
+              >
                 {item.content}
               </Text>
             </View>
@@ -149,7 +138,9 @@ export default function Center() {
         onContentSizeChange={() => flatListRef.current?.scrollToEnd?.()}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View className="flex-row items-center p-3 bg-white mb-8">
           <Ionicons name="add" size={24} color="#222" className="mr-2" />
           <View className="flex-1 bg-[#F6F7FB] rounded-full px-4 py-1.5">
@@ -164,7 +155,11 @@ export default function Center() {
             />
           </View>
           <TouchableOpacity onPress={handleSend} className="ml-2">
-            <Ionicons name="arrow-up-circle" size={28} color={input.trim() ? '#EB5A36' : '#ccc'} />
+            <Ionicons
+              name="arrow-up-circle"
+              size={28}
+              color={input.trim() ? '#EB5A36' : '#ccc'}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
