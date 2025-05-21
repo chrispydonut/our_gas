@@ -84,12 +84,12 @@ export default function AdminCenter() {
       .insert({
         conversation_id,
         sender_id: adminId,
-        content: input.trim(),
+        content: input.trim(), 
       });
 
     await supabase
       .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
+      .update({ updated_at: new Date().toISOString() }) 
       .eq('id', conversation_id);
 
     setInput('');
